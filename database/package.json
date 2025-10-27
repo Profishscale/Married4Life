@@ -1,0 +1,21 @@
+{
+  "name": "married4life-database",
+  "version": "1.0.0",
+  "description": "Database initialization for Marriaged4Life",
+  "main": "init.ts",
+  "scripts": {
+    "init": "node init.ts",
+    "schema": "psql -U postgres -d married4life -f schema.sql"
+  },
+  "dependencies": {
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/pg": "^8.10.9",
+    "typescript": "^5.3.2",
+    "ts-node": "^10.9.2"
+  }
+}
+
