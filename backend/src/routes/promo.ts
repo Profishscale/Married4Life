@@ -18,7 +18,37 @@ const createSchema = z.object({
   maxUses: z.number().optional(),
 });
 
-// POST /validate - Validate promo code
+// POST /redeem - Redeem promo code (matches spec)
+router.post('/redeem', async (req: Request, res: Response) => {
+  // TODO: Add auth middleware
+  // const userId = req.user.id;
+  
+  try {
+    const { code, userId } = req.body;
+
+    if (!code || !userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: code and userId',
+      });
+    }
+
+    const result = await promoService.validatePromoCode(code, userId);
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error('Error redeeming promo code:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to redeem promo code',
+    });
+  }
+});
+
+// POST /validate - Validate promo code (alias for backward compat)
 router.post('/validate', async (req: Request, res: Response) => {
   try {
     const validated = validateSchema.parse(req.body);
@@ -67,8 +97,9 @@ router.get('/check/:userId', async (req: Request, res: Response) => {
   }
 });
 
-// DEV/PROTOTYPE ONLY - Create promo code
-router.post('/create', async (req: Request, res: Response) => {
+// POST /admin/promo - Create promo code (DEV/PROTOTYPE ONLY)
+router.post('/admin/promo', async (req: Request, res: Response) => {
+  // TODO: Add admin authentication check here
   try {
     // In production, add authentication check here
     console.warn('⚠️  DEV/PROTOTYPE: Creating promo code');
