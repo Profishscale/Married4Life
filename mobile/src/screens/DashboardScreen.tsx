@@ -308,20 +308,22 @@ export default function DashboardScreen({ navigation, route }: Props) {
             </View>
           </View>
 
-          {/* Featured Content */}
+          {/* Settings Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Featured</Text>
+            <Text style={styles.sectionTitle}>Settings</Text>
 
-            <TouchableOpacity style={styles.featuredCard}>
-              <Text style={styles.featuredEmoji}>💕</Text>
-              <View style={styles.featuredText}>
-                <Text style={styles.featuredTitle}>
-                  Discover Your Love Language
-                </Text>
-                <Text style={styles.featuredDescription}>
-                  Learn how you and your partner express love
+            <TouchableOpacity
+              style={styles.settingsCard}
+              onPress={() => handleNavigate('Subscription')}
+            >
+              <Text style={styles.settingsEmoji}>💎</Text>
+              <View style={styles.settingsText}>
+                <Text style={styles.settingsTitle}>Subscription</Text>
+                <Text style={styles.settingsDescription}>
+                  Upgrade your plan or redeem promo code
                 </Text>
               </View>
+              <Text style={styles.settingsArrow}>→</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -555,6 +557,37 @@ const styles = StyleSheet.create({
   featuredDescription: {
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.7)',
+  },
+  settingsCard: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+  },
+  settingsEmoji: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  settingsText: {
+    flex: 1,
+  },
+  settingsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  settingsDescription: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  settingsArrow: {
+    fontSize: 24,
+    color: '#D4AF37',
+    fontWeight: 'bold',
   },
 });
 

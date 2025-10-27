@@ -13,6 +13,8 @@ import gamesRoutes from './routes/games';
 import notificationsRoutes from './routes/notifications';
 import userProgressRoutes from './routes/userProgress';
 import contentRoutes from './routes/content';
+import subscriptionsRoutes from './routes/subscriptions';
+import promoRoutes from './routes/promo';
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use('/api/games', gamesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/user-progress', userProgressRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/subscriptions', subscriptionsRoutes);
+app.use('/api/promo', promoRoutes);
 
 // Root route
 app.get('/', (req: Request, res: Response) => {

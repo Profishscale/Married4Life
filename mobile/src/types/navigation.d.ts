@@ -5,6 +5,8 @@ export type RootStackParamList = {
   Home: undefined;
   AICoach: undefined;
   GrowthCenter: undefined;
+  Subscription: undefined;
+  AdminPromo: undefined;
   Courses: undefined;
   Games: undefined;
   Profile: undefined;

@@ -231,6 +231,46 @@ async function createTables() {
       completed BOOLEAN DEFAULT false,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Promo codes for subscription unlocking (DEV/PROTOTYPE ONLY)
+    CREATE TABLE IF NOT EXISTS promo_codes (
+      id SERIAL PRIMARY KEY,
+      code VARCHAR(50) UNIQUE NOT NULL,
+      description VARCHAR(255),
+      plan_type VARCHAR(20) DEFAULT 'pro',
+      expires_at TIMESTAMP,
+      max_uses INTEGER,
+      current_uses INTEGER DEFAULT 0,
+      is_active BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_by INTEGER REFERENCES users(id)
+    );
+
+    -- User promo code redemptions
+    CREATE TABLE IF NOT EXISTS user_promo_redeems (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      promo_code_id INTEGER REFERENCES promo_codes(id),
+      plan_type VARCHAR(20),
+      redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP,
+      UNIQUE(user_id, promo_code_id)
+    );
+
+    -- Stripe subscriptions
+    CREATE TABLE IF NOT EXISTS stripe_subscriptions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      stripe_customer_id VARCHAR(255) UNIQUE,
+      stripe_subscription_id VARCHAR(255) UNIQUE,
+      stripe_price_id VARCHAR(255),
+      plan_type VARCHAR(20),
+      status VARCHAR(50),
+      current_period_start TIMESTAMP,
+      current_period_end TIMESTAMP,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
   `;
 
   try {
