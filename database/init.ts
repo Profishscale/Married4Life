@@ -155,6 +155,18 @@ async function createTables() {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, streak_type)
     );
+
+    -- User activity log for analytics and progress tracking
+    CREATE TABLE IF NOT EXISTS user_activity (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      date DATE NOT NULL,
+      action_type VARCHAR(50) NOT NULL,
+      value INTEGER DEFAULT 1,
+      metadata JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, date, action_type)
+    );
   `;
 
   try {

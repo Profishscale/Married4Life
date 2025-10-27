@@ -11,6 +11,7 @@ import aiCoachRoutes from './routes/aiCoach';
 import coursesRoutes from './routes/courses';
 import gamesRoutes from './routes/games';
 import notificationsRoutes from './routes/notifications';
+import userProgressRoutes from './routes/userProgress';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/ai-coach', aiCoachRoutes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/games', gamesRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/user-progress', userProgressRoutes);
 
 // Root route
 app.get('/', (req: Request, res: Response) => {

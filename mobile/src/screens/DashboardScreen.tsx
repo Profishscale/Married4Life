@@ -12,6 +12,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import ProgressSummaryCard from '../components/ProgressSummaryCard';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
 
@@ -26,16 +27,30 @@ interface CoachSession {
 }
 
 type FilterType = 'all' | 'daily' | 'weekly';
+type TabType = 'overview' | 'progress' | 'insights';
+
+interface ProgressData {
+  totalCheckIns: number;
+  daysActive: number;
+  currentStreak: number;
+  longestStreak: number;
+  recentActivity: any[];
+  weeklyEngagement: { date: string; count: number }[];
+  engagementTrend: { date: string; value: number }[];
+}
 
 export default function DashboardScreen({ navigation, route }: Props) {
   const userName = route.params?.userName || 'User';
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [sessions, setSessions] = useState<CoachSession[]>([]);
+  const [progressData, setProgressData] = useState<ProgressData | null>(null);
   const [loading, setLoading] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     loadLatestSessions();
+    loadProgressData();
   }, [activeFilter]);
 
   const loadLatestSessions = async () => {
@@ -75,6 +90,22 @@ export default function DashboardScreen({ navigation, route }: Props) {
     }
   };
 
+  const loadProgressData = async () => {
+    try {
+      const userId = '1'; // TODO: Get from auth context
+      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      
+      const response = await fetch(`${API_BASE_URL}/api/user-progress/${userId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setProgressData(data.data);
+      }
+    } catch (error) {
+      console.error('Error loading progress data:', error);
+    }
+  };
+
   const handleNavigate = (screen: keyof RootStackParamList) => {
     navigation.navigate(screen);
   };
@@ -89,11 +120,52 @@ export default function DashboardScreen({ navigation, route }: Props) {
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
             <Text style={styles.welcomeText}>
-              Welcome, {userName}! 👋
+              Welcome back, {userName}! 💛
             </Text>
             <Text style={styles.subtitle}>
-              Let's begin your journey to stronger relationships
+              Let's continue your journey to stronger relationships
             </Text>
+          </View>
+
+          {/* Progress Summary Card */}
+          {progressData && (
+            <ProgressSummaryCard
+              progress={{
+                currentStreak: progressData.currentStreak,
+                longestStreak: progressData.longestStreak,
+                daysActive: progressData.daysActive,
+                totalCheckIns: progressData.totalCheckIns,
+              }}
+              onViewProgress={() => setActiveTab('progress')}
+            />
+          )}
+
+          {/* Tab Navigation */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'overview' && styles.tabActive]}
+              onPress={() => setActiveTab('overview')}
+            >
+              <Text style={[styles.tabText, activeTab === 'overview' && styles.tabTextActive]}>
+                Overview
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'progress' && styles.tabActive]}
+              onPress={() => setActiveTab('progress')}
+            >
+              <Text style={[styles.tabText, activeTab === 'progress' && styles.tabTextActive]}>
+                My Progress
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'insights' && styles.tabActive]}
+              onPress={() => setActiveTab('insights')}
+            >
+              <Text style={[styles.tabText, activeTab === 'insights' && styles.tabTextActive]}>
+                Insights
+              </Text>
+            </TouchableOpacity>
           </View>
 
           {/* Latest AI Guidance Section */}
@@ -377,6 +449,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginHorizontal: 24,
+    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 16,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  tabActive: {
+    backgroundColor: '#D4AF37',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  tabTextActive: {
+    color: '#0A1F44',
   },
   actionCard: {
     marginBottom: 12,
