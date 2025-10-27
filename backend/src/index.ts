@@ -12,6 +12,7 @@ import coursesRoutes from './routes/courses';
 import gamesRoutes from './routes/games';
 import notificationsRoutes from './routes/notifications';
 import userProgressRoutes from './routes/userProgress';
+import contentRoutes from './routes/content';
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use('/api/courses', coursesRoutes);
 app.use('/api/games', gamesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/user-progress', userProgressRoutes);
+app.use('/api/content', contentRoutes);
 
 // Root route
 app.get('/', (req: Request, res: Response) => {

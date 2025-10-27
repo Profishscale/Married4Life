@@ -6,6 +6,7 @@ import WelcomeScreen from './src/screens/WelcomeScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import AICoachScreen from './src/screens/AICoachScreen';
+import GrowthCenterScreen from './src/screens/GrowthCenterScreen';
 import { RootStackParamList } from './src/types/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,6 +27,7 @@ export default function App() {
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="Dashboard" component={DashboardScreen} />
           <Stack.Screen name="AICoach" component={AICoachScreen} />
+          <Stack.Screen name="GrowthCenter" component={GrowthCenterScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

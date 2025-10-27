@@ -4,6 +4,7 @@ export type RootStackParamList = {
   Dashboard: { userName?: string };
   Home: undefined;
   AICoach: undefined;
+  GrowthCenter: undefined;
   Courses: undefined;
   Games: undefined;
   Profile: undefined;

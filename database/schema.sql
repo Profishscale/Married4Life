@@ -81,6 +81,70 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Content (courses, games, resources)
+CREATE TABLE IF NOT EXISTS content (
+  id SERIAL PRIMARY KEY,
+  type VARCHAR(20) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  url TEXT,
+  thumbnail_url TEXT,
+  difficulty VARCHAR(20),
+  duration INTEGER,
+  tags TEXT[],
+  category VARCHAR(100),
+  required_tier VARCHAR(20) DEFAULT 'free',
+  order_index INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Course lessons (for multi-lesson courses)
+CREATE TABLE IF NOT EXISTS course_lessons (
+  id SERIAL PRIMARY KEY,
+  course_id INTEGER REFERENCES content(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  video_url TEXT,
+  reflection_question TEXT,
+  order_index INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Course progress tracking
+CREATE TABLE IF NOT EXISTS course_progress (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  course_id INTEGER REFERENCES content(id) ON DELETE CASCADE,
+  lesson_id INTEGER REFERENCES course_lessons(id) ON DELETE CASCADE,
+  completed BOOLEAN DEFAULT false,
+  progress_percentage INTEGER DEFAULT 0,
+  last_accessed TIMESTAMP,
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, course_id, lesson_id)
+);
+
+-- Bookmarks/favorites
+CREATE TABLE IF NOT EXISTS bookmarks (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  content_id INTEGER REFERENCES content(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(user_id, content_id)
+);
+
+-- Game prompts and responses
+CREATE TABLE IF NOT EXISTS game_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  game_type VARCHAR(50),
+  prompt_id INTEGER,
+  response TEXT,
+  completed BOOLEAN DEFAULT false,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Session read tracking for analytics
 CREATE TABLE IF NOT EXISTS session_reads (
   id SERIAL PRIMARY KEY,

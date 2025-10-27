@@ -267,13 +267,13 @@ export default function DashboardScreen({ navigation, route }: Props) {
 
             <TouchableOpacity
               style={styles.actionCard}
-              onPress={() => handleNavigate('Courses')}
+              onPress={() => handleNavigate('GrowthCenter')}
             >
               <View style={styles.actionCardInner}>
-                <Text style={styles.actionEmoji}>📚</Text>
-                <Text style={styles.actionTitle}>Courses</Text>
+                <Text style={styles.actionEmoji}>🎯</Text>
+                <Text style={styles.actionTitle}>Growth Center</Text>
                 <Text style={styles.actionDescription}>
-                  Learn about love languages and more
+                  Courses, games, and resources for growth
                 </Text>
               </View>
             </TouchableOpacity>
