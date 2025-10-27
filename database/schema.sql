@@ -79,3 +79,14 @@ CREATE TABLE IF NOT EXISTS notification_preferences (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Coach sessions (AI advice storage)
+CREATE TABLE IF NOT EXISTS coach_sessions (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  message_title VARCHAR(255),
+  message_body TEXT NOT NULL,
+  call_to_action TEXT,
+  user_context JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+

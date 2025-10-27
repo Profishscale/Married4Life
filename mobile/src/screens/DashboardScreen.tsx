@@ -18,8 +18,7 @@ export default function DashboardScreen({ navigation, route }: Props) {
   const userName = 'User'; // This will come from auth context
 
   const handleNavigate = (screen: keyof RootStackParamList) => {
-    // navigation.navigate(screen);
-    console.log(`Navigate to ${screen}`);
+    navigation.navigate(screen);
   };
 
   return (
