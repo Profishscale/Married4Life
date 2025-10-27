@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { config } from './config';
+import { initializeCronJobs } from './services/cron';
 
 // Import routes
 import healthRoutes from './routes/health';
@@ -9,6 +10,7 @@ import authRoutes from './routes/auth';
 import aiCoachRoutes from './routes/aiCoach';
 import coursesRoutes from './routes/courses';
 import gamesRoutes from './routes/games';
+import notificationsRoutes from './routes/notifications';
 
 dotenv.config();
 
@@ -25,12 +27,16 @@ import('../database/init').then(({ initializeDatabase }) => {
   initializeDatabase().catch(console.error);
 });
 
+// Initialize cron jobs for scheduled check-ins
+initializeCronJobs();
+
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/ai-coach', aiCoachRoutes);
 app.use('/api/courses', coursesRoutes);
 app.use('/api/games', gamesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Root route
 app.get('/', (req: Request, res: Response) => {

@@ -8,6 +8,7 @@ export interface CoachSession {
   messageBody: string;
   callToAction: string;
   userContext?: any;
+  sessionType?: string;
   createdAt: Date;
 }
 
@@ -18,20 +19,24 @@ export class CoachSessionService {
     messageBody: string;
     callToAction: string;
     userContext?: any;
+    sessionType?: string;
   }): Promise<CoachSession> {
     try {
+      const sessionType = data.sessionType || 'manual';
+      
       const result = await pool.query(
         `INSERT INTO coach_sessions 
-         (user_id, message_title, message_body, call_to_action, user_context)
-         VALUES ($1, $2, $3, $4, $5)
+         (user_id, message_title, message_body, call_to_action, user_context, session_type)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, user_id, message_title, message_body, call_to_action, 
-                   user_context, created_at`,
+                   user_context, session_type, created_at`,
         [
           parseInt(data.userId),
           data.messageTitle,
           data.messageBody,
           data.callToAction,
           data.userContext ? JSON.stringify(data.userContext) : null,
+          sessionType,
         ]
       );
 
@@ -55,7 +60,7 @@ export class CoachSessionService {
     try {
       const result = await pool.query(
         `SELECT id, user_id, message_title, message_body, call_to_action, 
-                user_context, created_at
+                user_context, session_type, created_at
          FROM coach_sessions 
          WHERE user_id = $1 
          ORDER BY created_at DESC
@@ -70,6 +75,7 @@ export class CoachSessionService {
         messageBody: row.message_body,
         callToAction: row.call_to_action,
         userContext: row.user_context,
+        sessionType: row.session_type,
         createdAt: row.created_at,
       }));
     } catch (error) {
@@ -82,7 +88,7 @@ export class CoachSessionService {
     try {
       const result = await pool.query(
         `SELECT id, user_id, message_title, message_body, call_to_action, 
-                user_context, created_at
+                user_context, session_type, created_at
          FROM coach_sessions 
          WHERE id = $1`,
         [parseInt(sessionId)]
@@ -100,6 +106,7 @@ export class CoachSessionService {
         messageBody: row.message_body,
         callToAction: row.call_to_action,
         userContext: row.user_context,
+        sessionType: row.session_type,
         createdAt: row.created_at,
       };
     } catch (error) {

@@ -131,7 +131,29 @@ async function createTables() {
       message_body TEXT NOT NULL,
       call_to_action TEXT,
       user_context JSONB,
+      session_type VARCHAR(20) DEFAULT 'manual',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- Session read tracking for analytics
+    CREATE TABLE IF NOT EXISTS session_reads (
+      id SERIAL PRIMARY KEY,
+      session_id INTEGER REFERENCES coach_sessions(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(session_id, user_id)
+    );
+
+    -- User engagement streaks
+    CREATE TABLE IF NOT EXISTS user_streaks (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      streak_type VARCHAR(20) NOT NULL,
+      current_streak INTEGER DEFAULT 0,
+      longest_streak INTEGER DEFAULT 0,
+      last_activity_date DATE,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, streak_type)
     );
   `;
 
