@@ -1,0 +1,28 @@
+How to Get the QR Code to Show:
+
+1. **Run in a new PowerShell window:**
+   cd C:\married4life\mobile
+   npx expo start
+
+2. **Or use the batch file:**
+   cd C:\married4life
+   START_APP.bat
+
+3. **Look for the QR code in the terminal window**
+
+4. **On your phone:**
+   - Open Expo Go app
+   - Tap "Scan QR code"
+   - Point camera at the QR code in the terminal
+
+Alternative - Enter URL manually:
+   exp://192.168.0.148:8081
+
+Or open in browser:
+   In the terminal, press 'w' key
+
+Current Status:
+- ✅ Expo SDK 54 installed
+- ✅ Server running on port 8081
+- ✅ QR code should display in the new window
+
