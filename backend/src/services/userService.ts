@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { pool } from '../../database/init';
+import { pool } from '../../../database/init';
 import { User } from '../../../shared/types';
 
 export class UserService {

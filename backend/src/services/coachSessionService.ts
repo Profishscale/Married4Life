@@ -1,4 +1,4 @@
-import { pool } from '../../database/init';
+import { pool } from '../../../database/init';
 import { AIConversation } from '../../../shared/types';
 
 export interface CoachSession {

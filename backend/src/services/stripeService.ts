@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 import { config } from '../config';
-import { pool } from '../../database/init';
+import { pool } from '../../../database/init';
 
 export class StripeService {
   private stripe: Stripe;

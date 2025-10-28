@@ -1,4 +1,4 @@
-import { pool } from '../../database/init';
+import { pool } from '../../../database/init';
 import { aiCoachService } from './aiCoach';
 import { coachSessionService } from './coachSessionService';
 

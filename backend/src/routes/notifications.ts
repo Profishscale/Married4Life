@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { z } from 'zod';
-import { pool } from '../../database/init';
+import { pool } from '../../../database/init';
 
 const router = express.Router();
 

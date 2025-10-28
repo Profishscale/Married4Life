@@ -1,4 +1,4 @@
-import { pool } from '../../database/init';
+import { pool } from '../../../database/init';
 
 export interface Content {
   id: string;
