@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,24 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  ImageBackground,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFonts, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
+import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const IS_MOBILE = SCREEN_WIDTH < 768;
+
 interface FormData {
   firstName: string;
-  relationshipStatus: 'single' | 'dating' | 'engaged' | 'married';
+  relationshipStatus: 'dating' | 'engaged' | 'married';
   partnerName: string;
   birthday: string;
   email: string;
@@ -26,13 +34,29 @@ interface FormData {
 }
 
 const RELATIONSHIP_STATUSES = [
-  { value: 'single', label: 'Single', emoji: '🙋' },
-  { value: 'dating', label: 'Dating', emoji: '💕' },
-  { value: 'engaged', label: 'Engaged', emoji: '💍' },
-  { value: 'married', label: 'Married', emoji: '💑' },
+  { 
+    value: 'dating' as const, 
+    label: 'Dating',
+    image: require('../../assets/dating-image-1.jpg')
+  },
+  { 
+    value: 'engaged' as const, 
+    label: 'Engaged',
+    image: require('../../assets/engaged-updated.jpg')
+  },
+  { 
+    value: 'married' as const, 
+    label: 'Married',
+    image: require('../../assets/married-photo.jpg')
+  },
 ];
 
 export default function OnboardingScreen({ navigation }: Props) {
+  const [fontsLoaded] = useFonts({
+    Poppins_600SemiBold,
+    PlayfairDisplay_600SemiBold,
+  });
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -44,13 +68,85 @@ export default function OnboardingScreen({ navigation }: Props) {
     password: '',
   });
 
+  // Animation values for title
+  const titleOpacity = useRef(new Animated.Value(0)).current;
+  const cardAnimations = useRef(
+    RELATIONSHIP_STATUSES.map(() => ({
+      scale: new Animated.Value(1),
+      translateY: new Animated.Value(0),
+      glow: new Animated.Value(0),
+    }))
+  ).current;
+
+  useEffect(() => {
+    // Title fade-in animation
+    Animated.timing(titleOpacity, {
+      toValue: 1,
+      duration: 800,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
   const updateField = (field: keyof FormData, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
 
+  const handleCardPress = (status: 'dating' | 'engaged' | 'married', index: number) => {
+    updateField('relationshipStatus', status);
+    
+    // Animate card press
+    Animated.parallel([
+      Animated.spring(cardAnimations[index].scale, {
+        toValue: 0.98,
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardAnimations[index].glow, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: false, // Glow uses shadow which can't use native driver
+      }),
+    ]).start(() => {
+      Animated.spring(cardAnimations[index].scale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const handleCardPressIn = (index: number) => {
+    Animated.parallel([
+      Animated.spring(cardAnimations[index].translateY, {
+        toValue: -4,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardAnimations[index].scale, {
+        toValue: 0.98,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleCardPressOut = (index: number) => {
+    Animated.parallel([
+      Animated.spring(cardAnimations[index].translateY, {
+        toValue: 0,
+        useNativeDriver: true,
+      }),
+      Animated.spring(cardAnimations[index].scale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const handleNext = () => {
+    if (step === 1) {
+      // Relationship status is required, always proceed
+      setStep(step + 1);
+      return;
+    }
     if (step < 3) {
-      if (step === 1 && !formData.firstName) {
+      if (step === 2 && !formData.firstName) {
         Alert.alert('Required', 'Please enter your name');
         return;
       }
@@ -67,7 +163,6 @@ export default function OnboardingScreen({ navigation }: Props) {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Call registration API
       const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
@@ -90,11 +185,6 @@ export default function OnboardingScreen({ navigation }: Props) {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // TODO: Store token in AsyncStorage for future requests
-      // await AsyncStorage.setItem('authToken', data.data.token);
-      // await AsyncStorage.setItem('userData', JSON.stringify(data.data.user));
-
-      // Navigate to dashboard
       navigation.replace('Dashboard', { userName: formData.firstName });
     } catch (error: any) {
       Alert.alert(
@@ -120,12 +210,122 @@ export default function OnboardingScreen({ navigation }: Props) {
     </View>
   );
 
-  const renderStep1 = () => (
+  const renderStep1 = () => {
+    const continueButtonScale = useRef(new Animated.Value(1)).current;
+
+    const handleContinuePressIn = () => {
+      Animated.spring(continueButtonScale, {
+        toValue: 0.98,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const handleContinuePressOut = () => {
+      Animated.spring(continueButtonScale, {
+        toValue: 1,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    return (
+      <View style={styles.step1Container}>
+        {/* Title */}
+        <Animated.View style={{ opacity: titleOpacity }}>
+          <Text style={[
+            styles.step1Title,
+            { fontFamily: fontsLoaded ? 'PlayfairDisplay_600SemiBold' : 'serif' }
+          ]}>
+            Where are you on your journey?
+          </Text>
+        </Animated.View>
+
+        {/* Relationship Status Cards */}
+        <View style={styles.cardsContainer}>
+          {RELATIONSHIP_STATUSES.map((status, index) => {
+            const isSelected = formData.relationshipStatus === status.value;
+            const anim = cardAnimations[index];
+
+            return (
+              <Animated.View
+                key={status.value}
+                style={[
+                  styles.cardWrapper,
+                  {
+                    transform: [
+                      { translateY: anim.translateY },
+                      { scale: anim.scale },
+                    ],
+                    shadowOpacity: isSelected ? 0.6 : 0.3,
+                  },
+                ]}
+              >
+                <TouchableOpacity
+                  style={[
+                    styles.statusCard,
+                    isSelected && styles.statusCardSelected,
+                  ]}
+                  onPress={() => handleCardPress(status.value, index)}
+                  onPressIn={() => handleCardPressIn(index)}
+                  onPressOut={() => handleCardPressOut(index)}
+                  activeOpacity={0.9}
+                >
+                  <ImageBackground
+                    source={status.image}
+                    style={styles.cardImage}
+                    resizeMode="cover"
+                  >
+                    <LinearGradient
+                      colors={
+                        isSelected
+                          ? ['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.55)']
+                          : ['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)']
+                      }
+                      style={styles.cardOverlay}
+                    >
+                      <Text
+                        style={[
+                          styles.cardLabel,
+                          { fontFamily: fontsLoaded ? 'Poppins_600SemiBold' : 'System' },
+                        ]}
+                      >
+                        {status.label}
+                      </Text>
+                    </LinearGradient>
+                  </ImageBackground>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
+
+        {/* Continue Button */}
+        <Animated.View
+          style={{ transform: [{ scale: continueButtonScale }] }}
+        >
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleNext}
+            onPressIn={handleContinuePressIn}
+            onPressOut={handleContinuePressOut}
+            activeOpacity={0.95}
+          >
+            <LinearGradient
+              colors={['#FFD54F', '#FFCA28']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.continueButtonGradient}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  };
+
+  const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.welcomeText}>Welcome! 👋</Text>
-      <Text style={styles.subtitle}>
-        We'll personalize your relationship guidance
-      </Text>
+      <Text style={styles.stepTitle}>Tell us more</Text>
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>What's your first name?</Text>
@@ -140,51 +340,15 @@ export default function OnboardingScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Your relationship status</Text>
-        <View style={styles.optionsContainer}>
-          {RELATIONSHIP_STATUSES.map((status) => (
-            <TouchableOpacity
-              key={status.value}
-              style={[
-                styles.optionCard,
-                formData.relationshipStatus === status.value &&
-                  styles.optionCardActive,
-              ]}
-              onPress={() => updateField('relationshipStatus', status.value)}
-            >
-              <Text style={styles.optionEmoji}>{status.emoji}</Text>
-              <Text
-                style={[
-                  styles.optionLabel,
-                  formData.relationshipStatus === status.value &&
-                    styles.optionLabelActive,
-                ]}
-              >
-                {status.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Text style={styles.label}>Partner's name (optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter partner's name"
+          placeholderTextColor="rgba(255, 255, 255, 0.5)"
+          value={formData.partnerName}
+          onChangeText={(text) => updateField('partnerName', text)}
+        />
       </View>
-    </View>
-  );
-
-  const renderStep2 = () => (
-    <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Tell us more</Text>
-
-      {formData.relationshipStatus !== 'single' && (
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Partner's name (optional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter partner's name"
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
-            value={formData.partnerName}
-            onChangeText={(text) => updateField('partnerName', text)}
-          />
-        </View>
-      )}
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Birthday (for personalized insights)</Text>
@@ -241,8 +405,10 @@ export default function OnboardingScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#0A1F44', '#1a3d6b']}
+        colors={['#FFE082', '#FFB74D', '#F48FB1']}
         style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
         <View style={styles.header}>
           <TouchableOpacity
@@ -271,32 +437,34 @@ export default function OnboardingScreen({ navigation }: Props) {
           {step === 3 && renderStep3()}
         </ScrollView>
 
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleNext}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#0A1F44" />
-            ) : (
-              <LinearGradient
-                colors={['#D4AF37', '#F5DE80']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.buttonGradient}
-              >
-                <Text style={styles.buttonText}>
-                  {step === 3 ? 'Complete' : 'Next'}
-                </Text>
-              </LinearGradient>
-            )}
-          </TouchableOpacity>
+        {step !== 1 && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleNext}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#00203F" />
+              ) : (
+                <LinearGradient
+                  colors={['#FFD54F', '#FFCA28']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonText}>
+                    {step === 3 ? 'Complete' : 'Next'}
+                  </Text>
+                </LinearGradient>
+              )}
+            </TouchableOpacity>
 
-          <Text style={styles.footerText}>
-            Step {step} of 3
-          </Text>
-        </View>
+            <Text style={styles.footerText}>
+              Step {step} of 3
+            </Text>
+          </View>
+        )}
       </LinearGradient>
     </SafeAreaView>
   );
@@ -332,10 +500,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
   },
   stepDotActive: {
-    backgroundColor: '#D4AF37',
+    backgroundColor: '#FFD54F',
     width: 24,
   },
   stepDotCompleted: {
@@ -345,20 +513,99 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 24,
+    padding: IS_MOBILE ? 24 : 40,
+    flexGrow: 1,
   },
-  welcomeText: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  step1Container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  step1Title: {
+    fontSize: IS_MOBILE ? 28 : 32,
+    fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 48,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
-  subtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+  cardsContainer: {
+    width: '100%',
+    maxWidth: 360,
+    alignItems: 'center',
+    gap: 20,
     marginBottom: 32,
+  },
+  cardWrapper: {
+    width: '100%',
+    shadowColor: '#FFD54F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  statusCard: {
+    width: '100%',
+    height: IS_MOBILE ? 140 : 160,
+    borderRadius: 22,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  statusCardSelected: {
+    borderColor: '#FFD54F',
+    borderWidth: 2,
+  },
+  cardImage: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
+  cardOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    padding: 20,
+  },
+  cardLabel: {
+    fontSize: IS_MOBILE ? 18 : 20,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  continueButton: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 50,
+    overflow: 'hidden',
+    shadowColor: '#FFD54F',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  continueButtonGradient: {
+    paddingVertical: 18,
+    paddingHorizontal: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  continueButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#00203F',
+  },
+  stepContainer: {
+    flex: 1,
+    maxWidth: 600,
+    width: '100%',
+    alignSelf: 'center',
   },
   stepTitle: {
     fontSize: 28,
@@ -366,9 +613,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 32,
     textAlign: 'center',
-  },
-  stepContainer: {
-    flex: 1,
   },
   inputContainer: {
     marginBottom: 24,
@@ -380,9 +624,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
@@ -390,42 +634,9 @@ const styles = StyleSheet.create({
   },
   hintText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255, 255, 255, 0.7)',
     marginTop: 8,
     fontStyle: 'italic',
-  },
-  optionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    marginTop: 8,
-  },
-  optionCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  optionCardActive: {
-    borderColor: '#D4AF37',
-    backgroundColor: 'rgba(212, 175, 55, 0.2)',
-  },
-  optionEmoji: {
-    fontSize: 40,
-    marginBottom: 8,
-  },
-  optionLabel: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  optionLabelActive: {
-    color: '#D4AF37',
   },
   footer: {
     paddingHorizontal: 24,
@@ -433,13 +644,13 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    borderRadius: 30,
+    borderRadius: 50,
     overflow: 'hidden',
     marginBottom: 12,
-    shadowColor: '#D4AF37',
+    shadowColor: '#FFD54F',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
     elevation: 8,
   },
   buttonGradient: {
@@ -449,12 +660,11 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#0A1F44',
+    color: '#00203F',
   },
   footerText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
 });
-
