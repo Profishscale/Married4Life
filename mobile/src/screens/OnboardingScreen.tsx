@@ -255,7 +255,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                       { translateY: anim.translateY },
                       { scale: anim.scale },
                     ],
-                    shadowOpacity: isSelected ? 0.6 : 0.3,
+                    shadowOpacity: isSelected ? 0.6 : 0.4,
                   },
                 ]}
               >
@@ -275,11 +275,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                     resizeMode="cover"
                   >
                     <LinearGradient
-                      colors={
-                        isSelected
-                          ? ['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.55)']
-                          : ['rgba(0,0,0,0.25)', 'rgba(0,0,0,0.45)']
-                      }
+                      colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.25)']}
                       style={styles.cardOverlay}
                     >
                       <Text
@@ -405,10 +401,10 @@ export default function OnboardingScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
       <LinearGradient
-        colors={['#FFE082', '#FFB74D', '#F48FB1']}
+        colors={['#1a1a1a', '#3b2a1e']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 0, y: 1 }}
       >
         <View style={styles.header}>
           <TouchableOpacity
@@ -523,6 +519,7 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     width: '100%',
     alignSelf: 'center',
+    paddingHorizontal: IS_MOBILE ? '10%' : 0,
   },
   step1Title: {
     fontSize: IS_MOBILE ? 28 : 32,
@@ -533,25 +530,28 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+    // Light gold color option if needed
+    // color: '#FFD54F',
   },
   cardsContainer: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 600,
     alignItems: 'center',
-    gap: 20,
-    marginBottom: 32,
+    gap: 24,
+    marginBottom: 40,
   },
   cardWrapper: {
     width: '100%',
     shadowColor: '#FFD54F',
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
+    shadowOpacity: 0.4,
     elevation: 8,
   },
   statusCard: {
     width: '100%',
-    height: IS_MOBILE ? 140 : 160,
-    borderRadius: 22,
+    height: IS_MOBILE ? 200 : 240,
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: 'transparent',
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 600,
     borderRadius: 50,
     overflow: 'hidden',
     shadowColor: '#FFD54F',
