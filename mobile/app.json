@@ -16,7 +16,11 @@
       "bundleIdentifier": "com.married4life.app"
     },
     "android": {
-      "package": "com.married4life.app"
+      "package": "com.married4life.app",
+      "usesCleartextTraffic": true,
+      "networkSecurityConfig": {
+        "cleartextTrafficPermitted": true
+      }
     }
   }
 }

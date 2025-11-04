@@ -18,6 +18,8 @@ import { useFonts, Poppins_600SemiBold } from '@expo-google-fonts/poppins';
 import { PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { log } from '../utils/log';
+import { register, getApiUrl } from '../utils/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
@@ -78,6 +80,9 @@ export default function OnboardingScreen({ navigation }: Props) {
     }))
   ).current;
 
+  // Continue button animation - MUST be at top level (not in renderStep1)
+  const continueButtonScale = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     // Title fade-in animation
     Animated.timing(titleOpacity, {
@@ -88,60 +93,142 @@ export default function OnboardingScreen({ navigation }: Props) {
   }, []);
 
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData({ ...formData, [field]: value });
+    try {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    } catch (error) {
+      log.error('Failed to update field', error, { field, value });
+    }
   };
 
+  // Valid relationship status values
+  const VALID_STATUSES: readonly ('dating' | 'engaged' | 'married')[] = ['dating', 'engaged', 'married'] as const;
+
   const handleCardPress = (status: 'dating' | 'engaged' | 'married', index: number) => {
-    updateField('relationshipStatus', status);
-    
-    // Animate card press
-    Animated.parallel([
-      Animated.spring(cardAnimations[index].scale, {
-        toValue: 0.98,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardAnimations[index].glow, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: false, // Glow uses shadow which can't use native driver
-      }),
-    ]).start(() => {
-      Animated.spring(cardAnimations[index].scale, {
-        toValue: 1,
-        useNativeDriver: true,
-      }).start();
-    });
+    try {
+      log.debug('[CardPress] Handling card press', { status, index });
+
+      // Validate status
+      if (!VALID_STATUSES.includes(status)) {
+        log.error('Invalid relationship status', undefined, { status, index });
+        Alert.alert('Error', 'Invalid relationship status selected. Please try again.');
+        return;
+      }
+
+      // Validate index
+      if (typeof index !== 'number' || index < 0 || index >= cardAnimations.length) {
+        log.error('Invalid card index', undefined, { index, maxIndex: cardAnimations.length - 1 });
+        Alert.alert('Error', 'Invalid card selection. Please try again.');
+        return;
+      }
+
+      // Validate animation ref exists
+      if (!cardAnimations[index]) {
+        log.error('Card animation ref missing', undefined, { index });
+        // Still allow status update, just skip animation
+        updateField('relationshipStatus', status);
+        return;
+      }
+
+      // Update relationship status
+      updateField('relationshipStatus', status);
+      log.info('[CardPress] Relationship status updated', { status });
+
+      // Animate card press with error handling
+      try {
+        const anim = cardAnimations[index];
+        if (!anim || !anim.scale || !anim.glow) {
+          log.warn('Animation refs incomplete, skipping animation', { index });
+          return;
+        }
+
+        Animated.parallel([
+          Animated.spring(anim.scale, {
+            toValue: 0.98,
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim.glow, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: false, // Glow uses shadow which can't use native driver
+          }),
+        ]).start((finished) => {
+          if (finished && anim.scale) {
+            Animated.spring(anim.scale, {
+              toValue: 1,
+              useNativeDriver: true,
+            }).start();
+          }
+        });
+      } catch (animError) {
+        log.error('Animation failed', animError, { index });
+        // Don't block the status update, just log the error
+      }
+    } catch (error) {
+      log.error('Card press handler failed', error, { status, index });
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    }
   };
 
   const handleCardPressIn = (index: number) => {
-    Animated.parallel([
-      Animated.spring(cardAnimations[index].translateY, {
-        toValue: -4,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardAnimations[index].scale, {
-        toValue: 0.98,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    try {
+      if (typeof index !== 'number' || index < 0 || index >= cardAnimations.length) {
+        log.warn('Invalid index in handleCardPressIn', { index });
+        return;
+      }
+
+      const anim = cardAnimations[index];
+      if (!anim || !anim.translateY || !anim.scale) {
+        log.warn('Animation refs missing in handleCardPressIn', { index });
+        return;
+      }
+
+      Animated.parallel([
+        Animated.spring(anim.translateY, {
+          toValue: -4,
+          useNativeDriver: true,
+        }),
+        Animated.spring(anim.scale, {
+          toValue: 0.98,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } catch (error) {
+      log.error('handleCardPressIn failed', error, { index });
+    }
   };
 
   const handleCardPressOut = (index: number) => {
-    Animated.parallel([
-      Animated.spring(cardAnimations[index].translateY, {
-        toValue: 0,
-        useNativeDriver: true,
-      }),
-      Animated.spring(cardAnimations[index].scale, {
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    try {
+      if (typeof index !== 'number' || index < 0 || index >= cardAnimations.length) {
+        log.warn('Invalid index in handleCardPressOut', { index });
+        return;
+      }
+
+      const anim = cardAnimations[index];
+      if (!anim || !anim.translateY || !anim.scale) {
+        log.warn('Animation refs missing in handleCardPressOut', { index });
+        return;
+      }
+
+      Animated.parallel([
+        Animated.spring(anim.translateY, {
+          toValue: 0,
+          useNativeDriver: true,
+        }),
+        Animated.spring(anim.scale, {
+          toValue: 1,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } catch (error) {
+      log.error('handleCardPressOut failed', error, { index });
+    }
   };
 
   const handleNext = () => {
     if (step === 1) {
       // Relationship status is required, always proceed
+      log.info('[Onboarding] Moving to step 2', { relationshipStatus: formData.relationshipStatus });
       setStep(step + 1);
       return;
     }
@@ -162,35 +249,54 @@ export default function OnboardingScreen({ navigation }: Props) {
 
   const handleSubmit = async () => {
     setLoading(true);
+    log.info('[Registration] Attempting registration', { email: formData.email });
+
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          email: formData.email,
-          password: formData.password,
-          relationshipStatus: formData.relationshipStatus,
-          partnerName: formData.partnerName || undefined,
-          birthday: formData.birthday || undefined,
-        }),
+      const data = await register({
+        firstName: formData.firstName,
+        email: formData.email,
+        password: formData.password,
+        relationshipStatus: formData.relationshipStatus,
+        partnerName: formData.partnerName || undefined,
+        birthday: formData.birthday || undefined,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (data.success && data.data) {
+        log.info('[Registration] Registration successful', { userId: data.data.user?.id });
+        navigation.replace('Dashboard', { userName: formData.firstName });
+      } else {
         throw new Error(data.error || 'Registration failed');
       }
-
-      navigation.replace('Dashboard', { userName: formData.firstName });
     } catch (error: any) {
-      Alert.alert(
-        'Registration Failed',
-        error.message || 'Failed to create account. Please try again.'
-      );
+      log.error('[Registration] Registration failed', error);
+      
+      const errorMessage = error.message || 'Failed to create account. Please try again.';
+      
+      if (errorMessage.includes('Network Error')) {
+        Alert.alert(
+          'Connection Error',
+          errorMessage,
+          [{ text: 'OK', style: 'default' }]
+        );
+      } else if (errorMessage.includes('Email already registered')) {
+        Alert.alert(
+          'Email Already Registered',
+          'This email is already registered. Please use the Login screen instead.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Go to Login', 
+              onPress: () => navigation.navigate('Login')
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Registration Failed',
+          errorMessage
+        );
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -211,7 +317,8 @@ export default function OnboardingScreen({ navigation }: Props) {
   );
 
   const renderStep1 = () => {
-    const continueButtonScale = useRef(new Animated.Value(1)).current;
+    // Note: continueButtonScale is now defined at component top level
+    // to comply with Rules of Hooks (hooks cannot be conditional)
 
     const handleContinuePressIn = () => {
       Animated.spring(continueButtonScale, {
@@ -242,31 +349,57 @@ export default function OnboardingScreen({ navigation }: Props) {
         {/* Relationship Status Cards */}
         <View style={styles.cardsContainer}>
           {RELATIONSHIP_STATUSES.map((status, index) => {
-            const isSelected = formData.relationshipStatus === status.value;
-            const anim = cardAnimations[index];
+            try {
+              // Validate status object
+              if (!status || !status.value || !status.label) {
+                log.error('Invalid status object in render', undefined, { index });
+                return null;
+              }
 
-            return (
-              <Animated.View
-                key={status.value}
-                style={[
-                  styles.cardWrapper,
-                  {
-                    transform: [
-                      { translateY: anim.translateY },
-                      { scale: anim.scale },
-                    ],
-                    shadowOpacity: isSelected ? 0.6 : 0.4,
-                  },
-                ]}
-              >
+              // Validate image exists
+              if (!status.image) {
+                log.error('Status image missing', undefined, { status: status.value, index });
+                return null;
+              }
+
+              const isSelected = formData.relationshipStatus === status.value;
+              const anim = cardAnimations && cardAnimations[index];
+
+              // Safe font family access
+              const fontFamily = fontsLoaded === true ? 'Poppins_600SemiBold' : 'System';
+
+              // Render card with animation if available, otherwise without
+              const cardContent = (
                 <TouchableOpacity
                   style={[
                     styles.statusCard,
                     isSelected && styles.statusCardSelected,
                   ]}
-                  onPress={() => handleCardPress(status.value, index)}
-                  onPressIn={() => handleCardPressIn(index)}
-                  onPressOut={() => handleCardPressOut(index)}
+                  onPress={() => {
+                    try {
+                      handleCardPress(status.value, index);
+                    } catch (error) {
+                      log.error('Card onPress failed', error, { status: status.value, index });
+                    }
+                  }}
+                  onPressIn={() => {
+                    try {
+                      if (anim) {
+                        handleCardPressIn(index);
+                      }
+                    } catch (error) {
+                      log.error('Card onPressIn failed', error, { index });
+                    }
+                  }}
+                  onPressOut={() => {
+                    try {
+                      if (anim) {
+                        handleCardPressOut(index);
+                      }
+                    } catch (error) {
+                      log.error('Card onPressOut failed', error, { index });
+                    }
+                  }}
                   activeOpacity={0.9}
                 >
                   <ImageBackground
@@ -281,7 +414,7 @@ export default function OnboardingScreen({ navigation }: Props) {
                       <Text
                         style={[
                           styles.cardLabel,
-                          { fontFamily: fontsLoaded ? 'Poppins_600SemiBold' : 'System' },
+                          { fontFamily },
                         ]}
                       >
                         {status.label}
@@ -289,8 +422,48 @@ export default function OnboardingScreen({ navigation }: Props) {
                     </LinearGradient>
                   </ImageBackground>
                 </TouchableOpacity>
-              </Animated.View>
-            );
+              );
+
+              // Render with animation if available
+              if (anim && anim.translateY && anim.scale) {
+                return (
+                  <Animated.View
+                    key={status.value}
+                    style={[
+                      styles.cardWrapper,
+                      {
+                        transform: [
+                          { translateY: anim.translateY },
+                          { scale: anim.scale },
+                        ],
+                        shadowOpacity: isSelected ? 0.6 : 0.4,
+                      },
+                    ]}
+                  >
+                    {cardContent}
+                  </Animated.View>
+                );
+              }
+
+              // Fallback: render without animation
+              return (
+                <View
+                  key={status.value}
+                  style={[
+                    styles.cardWrapper,
+                    {
+                      shadowOpacity: isSelected ? 0.6 : 0.4,
+                    },
+                  ]}
+                >
+                  {cardContent}
+                </View>
+              );
+            } catch (renderError) {
+              log.error('Render error in card', renderError, { index, status: status?.value });
+              // Return null to prevent crash, but log the error
+              return null;
+            }
           })}
         </View>
 

@@ -134,7 +134,8 @@ export async function registerPushToken(
   pushToken: string
 ): Promise<void> {
   try {
-    const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+    const { getApiBaseUrl } = await import('./api');
+    const API_BASE_URL = getApiBaseUrl();
     
     await fetch(`${API_BASE_URL}/api/notifications/push-token`, {
       method: 'POST',

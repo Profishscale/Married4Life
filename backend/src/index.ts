@@ -65,8 +65,9 @@ app.use((err: Error, req: Request, res: Response, next: () => void) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Marriaged4Life API is running on http://localhost:${PORT}`);
+  console.log(`🌐 Network accessible at http://0.0.0.0:${PORT}`);
   console.log(`📊 Environment: ${config.environment}`);
 });
 

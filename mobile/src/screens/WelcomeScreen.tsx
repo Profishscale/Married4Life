@@ -122,8 +122,7 @@ export default function WelcomeScreen({ navigation }: Props) {
   };
 
   const handleLogin = () => {
-    // TODO: Navigate to login screen when implemented
-    navigation.navigate('Dashboard', { userName: 'User' });
+    navigation.navigate('Login');
   };
 
   const handlePrimaryPressIn = () => {

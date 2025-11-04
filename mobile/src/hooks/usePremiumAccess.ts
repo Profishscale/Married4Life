@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { SubscriptionTier, PromoAccess } from '../utils/subscriptionGating';
+import { getApiBaseUrl } from '../utils/api';
 
 interface PremiumAccessState {
   isPremium: boolean;
@@ -26,7 +27,7 @@ export function usePremiumAccess(userId: string): PremiumAccessState {
 
   const checkAccess = async () => {
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_BASE_URL = getApiBaseUrl();
       
       // Get user's subscription tier
       // TODO: Implement get user endpoint

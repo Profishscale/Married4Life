@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { getApiBaseUrl } from '../utils/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AICoach'>;
 
@@ -40,7 +41,7 @@ export default function AICoachScreen({ navigation }: Props) {
     // TODO: Get userId from auth context
     const userId = '1'; // Placeholder
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_BASE_URL = getApiBaseUrl();
       const response = await fetch(`${API_BASE_URL}/api/ai-coach/sessions/${userId}`);
       const data = await response.json();
 
@@ -57,7 +58,7 @@ export default function AICoachScreen({ navigation }: Props) {
     setLoading(true);
     try {
       const userId = '1'; // TODO: Get from auth context
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_BASE_URL = getApiBaseUrl();
 
       const response = await fetch(`${API_BASE_URL}/api/ai-coach`, {
         method: 'POST',

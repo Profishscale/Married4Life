@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { getApiBaseUrl } from '../utils/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'GrowthCenter'>;
 
@@ -39,7 +40,7 @@ export default function GrowthCenterScreen({ navigation }: Props) {
   const loadContent = async () => {
     setLoading(true);
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_BASE_URL = getApiBaseUrl();
       let endpoint = `/api/content/${activeTab}`;
       
       const response = await fetch(`${API_BASE_URL}${endpoint}`);

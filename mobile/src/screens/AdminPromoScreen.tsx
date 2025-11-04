@@ -13,6 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { getApiBaseUrl } from '../utils/api';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AdminPromo'>;
 
@@ -43,7 +44,7 @@ export default function AdminPromoScreen({ navigation }: Props) {
   const loadPromoCodes = async () => {
     setLoading(true);
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_BASE_URL = getApiBaseUrl();
       
       const response = await fetch(`${API_BASE_URL}/api/promo`);
       const data = await response.json();
@@ -66,7 +67,7 @@ export default function AdminPromoScreen({ navigation }: Props) {
 
     setCreating(true);
     try {
-      const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+      const API_BASE_URL = getApiBaseUrl();
       
       const response = await fetch(`${API_BASE_URL}/api/promo/create`, {
         method: 'POST',
@@ -108,7 +109,7 @@ export default function AdminPromoScreen({ navigation }: Props) {
           style: 'destructive',
           onPress: async () => {
             try {
-              const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+              const API_BASE_URL = getApiBaseUrl();
               
               const response = await fetch(`${API_BASE_URL}/api/promo/${codeId}`, {
                 method: 'DELETE',
