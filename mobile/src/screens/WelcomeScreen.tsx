@@ -13,6 +13,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFonts, PlayfairDisplay_600SemiBold } from '@expo-google-fonts/playfair-display';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { DEV_BYPASS_AUTH } from '../utils/env';
+import { log } from '../utils/log';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
@@ -40,6 +42,10 @@ export default function WelcomeScreen({ navigation }: Props) {
   const quoteTranslateY = useRef(new Animated.Value(10)).current;
 
   useEffect(() => {
+    if (DEV_BYPASS_AUTH) {
+      log.info('[DEV MODE] Bypass active on Welcome screen');
+    }
+
     // Background zoom-in animation (starts immediately)
     Animated.timing(backgroundScale, {
       toValue: 1.05,
@@ -118,10 +124,20 @@ export default function WelcomeScreen({ navigation }: Props) {
   }, []);
 
   const handleGrowConnection = () => {
+    if (DEV_BYPASS_AUTH) {
+      log.info('[DEV MODE] Skipping onboarding - navigating to Dashboard');
+      navigation.replace('Dashboard', { userName: 'Developer Mode User' });
+      return;
+    }
     navigation.navigate('Onboarding');
   };
 
   const handleLogin = () => {
+    if (DEV_BYPASS_AUTH) {
+      log.info('[DEV MODE] Skipping login - navigating to Dashboard');
+      navigation.replace('Dashboard', { userName: 'Developer Mode User' });
+      return;
+    }
     navigation.navigate('Login');
   };
 

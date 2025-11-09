@@ -20,6 +20,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { log } from '../utils/log';
 import { register, getApiUrl } from '../utils/api';
+import { DEV_BYPASS_AUTH } from '../utils/env';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Onboarding'>;
 
@@ -226,6 +227,14 @@ export default function OnboardingScreen({ navigation }: Props) {
   };
 
   const handleNext = () => {
+    if (DEV_BYPASS_AUTH) {
+      log.info('[DEV MODE] Skipping onboarding steps - navigating to dashboard');
+      navigation.replace('Dashboard', {
+        userName: formData.firstName || 'Developer Mode User',
+      });
+      return;
+    }
+
     if (step === 1) {
       // Relationship status is required, always proceed
       log.info('[Onboarding] Moving to step 2', { relationshipStatus: formData.relationshipStatus });
@@ -248,6 +257,12 @@ export default function OnboardingScreen({ navigation }: Props) {
   };
 
   const handleSubmit = async () => {
+    if (DEV_BYPASS_AUTH) {
+      log.info('[DEV MODE] Skipping registration network call');
+      navigation.replace('Dashboard', { userName: formData.firstName || 'Developer Mode User' });
+      return;
+    }
+
     setLoading(true);
     log.info('[Registration] Attempting registration', { email: formData.email });
 

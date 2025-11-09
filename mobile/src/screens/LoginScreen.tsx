@@ -19,6 +19,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
 import { log } from '../utils/log';
 import { login, getApiUrl } from '../utils/api';
+import { DEV_BYPASS_AUTH } from '../utils/env';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -33,6 +34,12 @@ export default function LoginScreen({ navigation }: Props) {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
+    if (DEV_BYPASS_AUTH) {
+      log.info('[DEV MODE] Skipping login - navigating to dashboard');
+      navigation.replace('Dashboard', { userName: 'Developer Mode User' });
+      return;
+    }
+
     // Validation
     if (!email.trim()) {
       Alert.alert('Required', 'Please enter your email');

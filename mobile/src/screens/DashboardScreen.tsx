@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Animated,
+  ImageBackground,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -113,11 +114,17 @@ export default function DashboardScreen({ navigation, route }: Props) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#0A1F44', '#1a3d6b']}
-        style={styles.gradient}
+      <ImageBackground
+        source={require('../../assets/hand-holding-welcome.jpg')}
+        style={styles.backgroundImage}
+        imageStyle={styles.backgroundImageStyle}
       >
-        <ScrollView style={styles.content}>
+        <View style={styles.overlay} />
+        <LinearGradient
+          colors={['rgba(10, 31, 68, 0.88)', 'rgba(26, 61, 107, 0.88)']}
+          style={styles.gradient}
+        >
+          <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
           {/* Welcome Section */}
           <View style={styles.welcomeSection}>
             <Text style={styles.welcomeText}>
@@ -327,8 +334,9 @@ export default function DashboardScreen({ navigation, route }: Props) {
               <Text style={styles.settingsArrow}>→</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </LinearGradient>
+          </ScrollView>
+        </LinearGradient>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -337,11 +345,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  backgroundImage: {
+    flex: 1,
+  },
+  backgroundImageStyle: {
+    resizeMode: 'cover',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+    zIndex: 1,
+  },
   gradient: {
     flex: 1,
+    position: 'relative',
+    zIndex: 2,
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 120,
   },
   welcomeSection: {
     padding: 24,

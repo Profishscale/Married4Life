@@ -13,6 +13,7 @@ import AdminPromoScreen from './src/screens/AdminPromoScreen';
 import { RootStackParamList } from './src/types/navigation';
 import { checkBackendHealth, getApiUrl } from './src/utils/api';
 import { log } from './src/utils/log';
+import { DEV_BYPASS_AUTH } from './src/utils/env';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -23,6 +24,10 @@ export default function App() {
       const apiUrl = getApiUrl();
       log.info('[App] Starting health check', { apiUrl });
       
+      if (DEV_BYPASS_AUTH) {
+        log.info('[DEV MODE] Auth bypass active');
+      }
+
       const isHealthy = await checkBackendHealth();
       
       if (isHealthy) {
@@ -48,7 +53,7 @@ export default function App() {
       <StatusBar style="light" />
       <NavigationContainer>
         <Stack.Navigator 
-          initialRouteName="Welcome"
+          initialRouteName={DEV_BYPASS_AUTH ? 'Dashboard' : 'Welcome'}
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: '#0A1F44' }
@@ -57,7 +62,11 @@ export default function App() {
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          <Stack.Screen name="Dashboard" component={DashboardScreen} />
+          <Stack.Screen
+            name="Dashboard"
+            component={DashboardScreen}
+            initialParams={DEV_BYPASS_AUTH ? { userName: 'Developer Mode User' } : undefined}
+          />
           <Stack.Screen name="AICoach" component={AICoachScreen} />
           <Stack.Screen name="GrowthCenter" component={GrowthCenterScreen} />
           <Stack.Screen name="Subscription" component={SubscriptionScreen} />
